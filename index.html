@@ -31,7 +31,7 @@
 
       .page {
         width: 50%;
-        aspect-ratio: 9 / 16;
+        height: 100%;
         overflow: hidden;
         background-color: white;
       }
@@ -39,7 +39,7 @@
       .page img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
       #fullscreen-btn {
@@ -87,8 +87,9 @@
         console.log("Aantal pagina’s:", totalPages);
 
         let renderedPages = 0;
+        const flipbookHeight = Math.min(window.innerHeight * 0.9, 960);
         const maxPageHeight = 960;
-        const scale = Math.min(window.innerHeight * 0.9 / maxPageHeight, 1.3);
+        const scale = flipbookHeight / maxPageHeight;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
@@ -103,7 +104,7 @@
               img.src = canvas.toDataURL();
               img.style.width = "100%";
               img.style.height = "100%";
-              img.style.objectFit = "cover";
+              img.style.objectFit = "contain";
 
               const pageDiv = document.createElement("div");
               pageDiv.className = "page";
@@ -116,7 +117,6 @@
 
                 const isMobile = window.innerWidth < 600;
                 const flipbookWidth = isMobile ? window.innerWidth * 0.9 : Math.min(window.innerWidth * 0.9, 1080);
-                const flipbookHeight = Math.min(window.innerHeight * 0.9, 960);
 
                 $("#flipbook").turn({
                   width: flipbookWidth,
