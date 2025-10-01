@@ -88,18 +88,19 @@
 
         let renderedPages = 0;
         const flipbookHeight = flipbook.clientHeight;
-        const aspectRatio = 9 / 16;
-        const pageWidth = flipbookHeight * aspectRatio;
-        const scale = flipbookHeight / 960; // 960 = originele PDF-paginahoogte
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
+            const unscaled = page.getViewport({ scale: 1 });
+            const originalWidth = unscaled.width;
+            const originalHeight = unscaled.height;
+            const scale = flipbookHeight / originalHeight;
             const viewport = page.getViewport({ scale });
 
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
             canvas.height = viewport.height;
-            canvas.width = viewport.height * aspectRatio;
+            canvas.width = viewport.width;
 
             page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
               const img = document.createElement("img");
