@@ -39,7 +39,7 @@
       .page img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
       #fullscreen-btn {
@@ -88,26 +88,25 @@
 
         let renderedPages = 0;
         const flipbookHeight = flipbook.clientHeight;
+        const aspectRatio = 540 / 960;
+        const canvasWidth = flipbookHeight * aspectRatio;
+        const scale = flipbookHeight / 960;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
-            const unscaled = page.getViewport({ scale: 1 });
-            const originalWidth = unscaled.width;
-            const originalHeight = unscaled.height;
-            const scale = flipbookHeight / originalHeight;
             const viewport = page.getViewport({ scale });
 
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
             canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            canvas.width = canvasWidth;
 
             page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
               const img = document.createElement("img");
               img.src = canvas.toDataURL();
               img.style.width = "100%";
               img.style.height = "100%";
-              img.style.objectFit = "cover";
+              img.style.objectFit = "contain";
 
               const pageDiv = document.createElement("div");
               pageDiv.className = "page";
