@@ -87,10 +87,10 @@
         console.log("Aantal pagina’s:", totalPages);
 
         let renderedPages = 0;
-        const flipbookHeight = flipbook.clientHeight;
+        const flipbookWidth = flipbook.clientWidth;
         const originalWidth = 540;
         const originalHeight = 960;
-        const scale = flipbookHeight / originalHeight;
+        const scale = flipbookWidth / (originalWidth * 2); // 2 pagina's naast elkaar
         const canvasWidth = originalWidth * scale;
         const canvasHeight = originalHeight * scale;
 
@@ -120,8 +120,32 @@
                 console.log("Alle pagina’s geladen, flipbook activeren...");
 
                 const isMobile = window.innerWidth < 600;
-                const flipbookWidth = isMobile ? window.innerWidth * 0.9 : Math.min(window.innerWidth * 0.9, 1080);
+                const flipbookHeight = canvasHeight;
 
                 $("#flipbook").turn({
                   width: flipbookWidth,
                   height: flipbookHeight,
+                  autoCenter: true,
+                  display: isMobile ? "single" : "double",
+                });
+
+                flipbook.style.visibility = "visible";
+
+                setTimeout(() => {
+                  $("#flipbook").turn("center");
+                }, 500);
+
+                $("#flipbook").bind("turn.page", function () {
+                  flipSound.currentTime = 0;
+                  flipSound.play();
+                });
+
+                console.log("Turn.js geactiveerd");
+              }
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
