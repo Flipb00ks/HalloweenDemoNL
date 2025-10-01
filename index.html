@@ -4,24 +4,28 @@
     <meta charset="UTF-8" />
     <title>Flipboek</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.ico" />
     <style>
-      body {
+      html, body {
         margin: 0;
         padding: 0;
+        height: 100%;
+        font-family: sans-serif;
         background: url("backgroundc.svg") center center no-repeat;
         background-size: cover;
-        font-family: sans-serif;
-        overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        overflow: auto;
       }
 
       #flipbook {
-        width: 1080px; /* 2 x 540px */
+        width: 90%;
+        max-width: 1080px;
         height: 960px;
+        margin: 40px auto;
         visibility: hidden;
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
       }
 
       .page {
@@ -63,11 +67,9 @@
   </head>
 
   <body>
-    <body>
-      <button id="fullscreen-btn">Fullscreen</button>
-      <div id="flipbook"></div>
-      <audio id="flipSound" src="blad.mp3" preload="auto"></audio>
-    </body>
+    <button id="fullscreen-btn">Fullscreen</button>
+    <div id="flipbook"></div>
+    <audio id="flipSound" src="blad.mp3" preload="auto"></audio>
 
     <script>
       document.getElementById("fullscreen-btn").onclick = () => {
@@ -87,56 +89,55 @@
         console.log("Aantal pagina’s:", totalPages);
 
         let renderedPages = 0;
+        const scale = window.innerWidth < 800 ? 1.0 : 1.5;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
-            const viewport = page.getViewport({ scale: 1.5 });
+            const viewport = page.getViewport({ scale });
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
             canvas.height = viewport.height;
             canvas.width = viewport.width;
 
-            page
-              .render({ canvasContext: context, viewport: viewport })
-              .promise.then(() => {
-                const img = document.createElement("img");
-                img.src = canvas.toDataURL();
-                img.style.width = "100%";
-                img.style.height = "100%";
-                img.style.objectFit = "cover";
+            page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+              const img = document.createElement("img");
+              img.src = canvas.toDataURL();
+              img.style.width = "100%";
+              img.style.height = "100%";
+              img.style.objectFit = "cover";
 
-                const pageDiv = document.createElement("div");
-                pageDiv.className = "page";
-                pageDiv.appendChild(img);
-                flipbook.appendChild(pageDiv);
+              const pageDiv = document.createElement("div");
+              pageDiv.className = "page";
+              pageDiv.appendChild(img);
+              flipbook.appendChild(pageDiv);
 
-                renderedPages++;
-                if (renderedPages === totalPages) {
-                  console.log("Alle pagina’s geladen, flipbook activeren...");
+              renderedPages++;
+              if (renderedPages === totalPages) {
+                console.log("Alle pagina’s geladen, flipbook activeren...");
 
-                  const isMobile = window.innerWidth < 600;
+                const isMobile = window.innerWidth < 600;
 
-                  $("#flipbook").turn({
-                    width: isMobile ? 540 : 1080,
-                    height: 960,
-                    autoCenter: true,
-                    display: isMobile ? "single" : "double",
-                  });
+                $("#flipbook").turn({
+                  width: isMobile ? 540 : 1080,
+                  height: 960,
+                  autoCenter: true,
+                  display: isMobile ? "single" : "double",
+                });
 
-                  flipbook.style.visibility = "visible";
+                flipbook.style.visibility = "visible";
 
-                  setTimeout(() => {
-                    $("#flipbook").turn("center");
-                  }, 500);
+                setTimeout(() => {
+                  $("#flipbook").turn("center");
+                }, 500);
 
-                  $("#flipbook").bind("turn.page", function () {
-                    flipSound.currentTime = 0;
-                    flipSound.play();
-                  });
+                $("#flipbook").bind("turn.page", function () {
+                  flipSound.currentTime = 0;
+                  flipSound.play();
+                });
 
-                  console.log("Turn.js geactiveerd");
-                }
-              });
+                console.log("Turn.js geactiveerd");
+              }
+            });
           });
         }
       });
