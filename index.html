@@ -88,21 +88,20 @@
 
         let renderedPages = 0;
         const flipbookHeight = flipbook.clientHeight;
+        const originalWidth = 540;
+        const originalHeight = 960;
+        const scale = flipbookHeight / originalHeight;
+        const canvasWidth = originalWidth * scale;
+        const canvasHeight = originalHeight * scale;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
-            const originalViewport = page.getViewport({ scale: 1 });
-            const originalWidth = originalViewport.width;
-            const originalHeight = originalViewport.height;
-            const scale = flipbookHeight / originalHeight;
-            const scaledWidth = originalWidth * scale;
-            const scaledHeight = originalHeight * scale;
             const viewport = page.getViewport({ scale });
 
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
-            canvas.width = scaledWidth;
-            canvas.height = scaledHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
 
             page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
               const img = document.createElement("img");
@@ -126,27 +125,3 @@
                 $("#flipbook").turn({
                   width: flipbookWidth,
                   height: flipbookHeight,
-                  autoCenter: true,
-                  display: isMobile ? "single" : "double",
-                });
-
-                flipbook.style.visibility = "visible";
-
-                setTimeout(() => {
-                  $("#flipbook").turn("center");
-                }, 500);
-
-                $("#flipbook").bind("turn.page", function () {
-                  flipSound.currentTime = 0;
-                  flipSound.play();
-                });
-
-                console.log("Turn.js geactiveerd");
-              }
-            });
-          });
-        }
-      });
-    </script>
-  </body>
-</html>
