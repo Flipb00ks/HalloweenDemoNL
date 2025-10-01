@@ -87,13 +87,15 @@
         console.log("Aantal pagina’s:", totalPages);
 
         let renderedPages = 0;
-        const flipbookHeight = Math.min(window.innerHeight * 0.9, 960);
-        const maxPageHeight = 960;
-        const scale = flipbookHeight / maxPageHeight;
+        const flipbookHeight = flipbook.clientHeight;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
-            const viewport = page.getViewport({ scale });
+            const unscaledViewport = page.getViewport({ scale: 1 });
+            const pageHeight = unscaledViewport.height;
+            const dynamicScale = flipbookHeight / pageHeight;
+            const viewport = page.getViewport({ scale: dynamicScale });
+
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
             canvas.height = viewport.height;
