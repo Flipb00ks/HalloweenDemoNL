@@ -22,7 +22,7 @@
       #flipbook {
         width: 90%;
         max-width: 1080px;
-        aspect-ratio: 16 / 9;
+        height: 90vh;
         margin: 40px auto;
         visibility: hidden;
         box-shadow: 0 0 20px rgba(0,0,0,0.2);
@@ -88,11 +88,9 @@
 
         let renderedPages = 0;
         const flipbookHeight = flipbook.clientHeight;
-        const flipbookWidth = flipbook.clientWidth;
         const aspectRatio = 9 / 16;
-        const pageHeight = flipbookHeight;
-        const pageWidth = pageHeight * aspectRatio;
-        const scale = pageHeight / 960; // 960 = originele PDF-paginahoogte
+        const pageWidth = flipbookHeight * aspectRatio;
+        const scale = flipbookHeight / 960; // 960 = originele PDF-paginahoogte
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
@@ -101,7 +99,7 @@
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
             canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            canvas.width = viewport.height * aspectRatio;
 
             page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
               const img = document.createElement("img");
@@ -120,6 +118,7 @@
                 console.log("Alle pagina’s geladen, flipbook activeren...");
 
                 const isMobile = window.innerWidth < 600;
+                const flipbookWidth = isMobile ? window.innerWidth * 0.9 : Math.min(window.innerWidth * 0.9, 1080);
 
                 $("#flipbook").turn({
                   width: flipbookWidth,
