@@ -22,15 +22,16 @@
       #flipbook {
         width: 90%;
         max-width: 1080px;
-        height: 960px;
+        height: 90vh;
         margin: 40px auto;
         visibility: hidden;
         box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        overflow: hidden;
       }
 
       .page {
         width: 540px;
-        height: 960px;
+        height: 100%;
         overflow: hidden;
         background-color: white;
       }
@@ -89,7 +90,7 @@
         console.log("Aantal pagina’s:", totalPages);
 
         let renderedPages = 0;
-        const scale = window.innerWidth < 800 ? 1.0 : 1.5;
+        const scale = window.innerWidth < 800 ? 1.0 : 1.3;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
@@ -116,10 +117,12 @@
                 console.log("Alle pagina’s geladen, flipbook activeren...");
 
                 const isMobile = window.innerWidth < 600;
+                const flipbookWidth = isMobile ? window.innerWidth * 0.9 : Math.min(window.innerWidth * 0.9, 1080);
+                const flipbookHeight = Math.min(window.innerHeight * 0.9, 960);
 
                 $("#flipbook").turn({
-                  width: isMobile ? 540 : 1080,
-                  height: 960,
+                  width: flipbookWidth,
+                  height: flipbookHeight,
                   autoCenter: true,
                   display: isMobile ? "single" : "double",
                 });
