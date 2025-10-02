@@ -37,7 +37,7 @@
         height: 100%;
         overflow: hidden;
         background-color: white;
-        border: 2px dashed red; /* visuele debugrand */
+        border: 2px dashed red;
       }
 
       .page img {
@@ -90,7 +90,6 @@
         const totalPages = pdf.numPages;
         console.log("Aantal pagina’s:", totalPages);
 
-        let renderedPages = 0;
         const flipbookWidth = flipbook.clientWidth;
         const originalWidth = 540;
         const originalHeight = 960;
@@ -100,3 +99,62 @@
         const canvasHeight = originalHeight * scale;
 
         console.log("Schaal:", scale);
+        console.log("Canvas breedte:", canvasWidth, "hoogte:", canvasHeight);
+
+        const pagePromises = [];
+
+        for (let i = 1; i <= totalPages; i++) {
+          pagePromises.push(
+            pdf.getPage(i).then((page) => {
+              const viewport = page.getViewport({ scale });
+
+              const canvas = document.createElement("canvas");
+              const context = canvas.getContext("2d");
+              canvas.width = canvasWidth;
+              canvas.height = canvasHeight;
+
+              return page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+                const img = document.createElement("img");
+                img.src = canvas.toDataURL("image/png");
+                img.style.width = "100%";
+                img.style.height = "100%";
+                img.style.objectFit = "contain";
+
+                const pageDiv = document.createElement("div");
+                pageDiv.className = "page";
+                pageDiv.appendChild(img);
+                flipbook.appendChild(pageDiv);
+              });
+            })
+          );
+        }
+
+        Promise.all(pagePromises).then(() => {
+          console.log("Alle pagina’s geladen, flipbook activeren...");
+
+          const isMobile = window.innerWidth < 600;
+
+          $("#flipbook").turn({
+            width: flipbookWidth,
+            height: canvasHeight,
+            autoCenter: true,
+            display: isMobile ? "single" : "double",
+          });
+
+          flipbook.style.visibility = "visible";
+
+          setTimeout(() => {
+            $("#flipbook").turn("center");
+          }, 500);
+
+          $("#flipbook").bind("turn.page", function () {
+            flipSound.currentTime = 0;
+            flipSound.play();
+          });
+
+          console.log("Turn.js geactiveerd");
+        });
+      });
+    </script>
+  </body>
+</html>
