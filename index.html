@@ -2,7 +2,7 @@
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <title>Flipboek</title>
+    <title>Flipboek Debug</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="favicon.ico" />
     <style>
@@ -25,6 +25,9 @@
         height: 90vh;
         margin: 40px auto;
         visibility: hidden;
+        display: block;
+        opacity: 1;
+        background: rgba(255,255,255,0.9);
         box-shadow: 0 0 20px rgba(0,0,0,0.2);
         overflow: hidden;
       }
@@ -34,12 +37,13 @@
         height: 100%;
         overflow: hidden;
         background-color: white;
+        border: 2px dashed red; /* visuele debugrand */
       }
 
       .page img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
       #fullscreen-btn {
@@ -90,62 +94,9 @@
         const flipbookWidth = flipbook.clientWidth;
         const originalWidth = 540;
         const originalHeight = 960;
-        const scale = flipbookWidth / (originalWidth * 2); // 2 pagina's naast elkaar
+        const maxScale = 1.5;
+        const scale = Math.min(flipbookWidth / (originalWidth * 2), maxScale);
         const canvasWidth = originalWidth * scale;
         const canvasHeight = originalHeight * scale;
 
-        for (let i = 1; i <= totalPages; i++) {
-          pdf.getPage(i).then((page) => {
-            const viewport = page.getViewport({ scale });
-
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-
-            page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
-              const img = document.createElement("img");
-              img.src = canvas.toDataURL("image/png");
-              img.style.width = "100%";
-              img.style.height = "100%";
-              img.style.objectFit = "cover";
-
-              const pageDiv = document.createElement("div");
-              pageDiv.className = "page";
-              pageDiv.appendChild(img);
-              flipbook.appendChild(pageDiv);
-
-              renderedPages++;
-              if (renderedPages === totalPages) {
-                console.log("Alle pagina’s geladen, flipbook activeren...");
-
-                const isMobile = window.innerWidth < 600;
-                const flipbookHeight = canvasHeight;
-
-                $("#flipbook").turn({
-                  width: flipbookWidth,
-                  height: flipbookHeight,
-                  autoCenter: true,
-                  display: isMobile ? "single" : "double",
-                });
-
-                flipbook.style.visibility = "visible";
-
-                setTimeout(() => {
-                  $("#flipbook").turn("center");
-                }, 500);
-
-                $("#flipbook").bind("turn.page", function () {
-                  flipSound.currentTime = 0;
-                  flipSound.play();
-                });
-
-                console.log("Turn.js geactiveerd");
-              }
-            });
-          });
-        }
-      });
-    </script>
-  </body>
-</html>
+        console.log("Schaal:", scale);
