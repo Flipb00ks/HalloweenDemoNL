@@ -2,7 +2,7 @@
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <title>Flipboek Basis</title>
+    <title>Flipboek</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="favicon.ico" />
     <style>
@@ -82,8 +82,13 @@
 
       pdfjsLib.getDocument(url).promise.then((pdf) => {
         const totalPages = pdf.numPages;
-        const flipbookHeight = flipbook.clientHeight;
-        const scale = flipbookHeight / 960;
+
+        const originalWidth = 768;
+        const originalHeight = 1344;
+        const flipbookWidth = flipbook.clientWidth;
+        const scale = flipbookWidth / (originalWidth * 2); // 2 pagina's naast elkaar
+        const canvasWidth = originalWidth * scale;
+        const canvasHeight = originalHeight * scale;
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.getPage(i).then((page) => {
@@ -91,15 +96,12 @@
 
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
 
             page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
               const img = document.createElement("img");
-              img.src = canvas.toDataURL();
-              img.style.width = "100%";
-              img.style.height = "100%";
-              img.style.objectFit = "contain";
+              img.src = canvas.toDataURL("image/png");
 
               const pageDiv = document.createElement("div");
               pageDiv.className = "page";
@@ -108,11 +110,10 @@
 
               if (flipbook.children.length === totalPages) {
                 const isMobile = window.innerWidth < 600;
-                const flipbookWidth = isMobile ? window.innerWidth * 0.9 : Math.min(window.innerWidth * 0.9, 1080);
 
                 $("#flipbook").turn({
                   width: flipbookWidth,
-                  height: flipbookHeight,
+                  height: canvasHeight,
                   autoCenter: true,
                   display: isMobile ? "single" : "double",
                 });
