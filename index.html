@@ -2,7 +2,7 @@
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <title>Flipboek Herstel</title>
+    <title>Flipboek Basis</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="favicon.ico" />
     <style>
@@ -25,9 +25,6 @@
         height: 90vh;
         margin: 40px auto;
         visibility: hidden;
-        display: block;
-        opacity: 1;
-        background: rgba(255,255,255,0.9);
         box-shadow: 0 0 20px rgba(0,0,0,0.2);
         overflow: hidden;
       }
@@ -37,7 +34,6 @@
         height: 100%;
         overflow: hidden;
         background-color: white;
-        border: 2px dashed lime;
       }
 
       .page img {
@@ -80,93 +76,62 @@
         }
       };
 
-      window.onload = () => {
-        const flipbook = document.getElementById("flipbook");
-        const flipSound = document.getElementById("flipSound");
-        const url = "boekje.pdf";
+      const url = "boekje.pdf";
+      const flipbook = document.getElementById("flipbook");
+      const flipSound = document.getElementById("flipSound");
 
-        flipbook.style.visibility = "visible";
-        flipbook.style.display = "block";
+      pdfjsLib.getDocument(url).promise.then((pdf) => {
+        const totalPages = pdf.numPages;
+        const flipbookHeight = flipbook.clientHeight;
+        const scale = flipbookHeight / 960;
 
-        console.log("Start PDF load...");
-        pdfjsLib.getDocument(url).promise.then((pdf) => {
-          console.log("PDF geladen:", pdf);
-          const totalPages = pdf.numPages;
-          console.log("Aantal pagina’s:", totalPages);
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.getPage(i).then((page) => {
+            const viewport = page.getViewport({ scale });
 
-          requestAnimationFrame(() => {
-            let flipbookWidth = flipbook.clientWidth;
-            if (flipbookWidth === 0) {
-              flipbookWidth = window.innerWidth * 0.9;
-              console.warn("Fallback breedte gebruikt:", flipbookWidth);
-            }
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
 
-            const originalWidth = 540;
-            const originalHeight = 960;
-            const maxScale = 1.5;
-            const scale = Math.min(flipbookWidth / (originalWidth * 2), maxScale);
-            const canvasWidth = originalWidth * scale;
-            const canvasHeight = originalHeight * scale;
+            page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+              const img = document.createElement("img");
+              img.src = canvas.toDataURL();
+              img.style.width = "100%";
+              img.style.height = "100%";
+              img.style.objectFit = "contain";
 
-            console.log("Schaal:", scale);
-            console.log("Canvas breedte:", canvasWidth, "hoogte:", canvasHeight);
+              const pageDiv = document.createElement("div");
+              pageDiv.className = "page";
+              pageDiv.appendChild(img);
+              flipbook.appendChild(pageDiv);
 
-            const pagePromises = [];
+              if (flipbook.children.length === totalPages) {
+                const isMobile = window.innerWidth < 600;
+                const flipbookWidth = isMobile ? window.innerWidth * 0.9 : Math.min(window.innerWidth * 0.9, 1080);
 
-            for (let i = 1; i <= totalPages; i++) {
-              pagePromises.push(
-                pdf.getPage(i).then((page) => {
-                  const viewport = page.getViewport({ scale });
+                $("#flipbook").turn({
+                  width: flipbookWidth,
+                  height: flipbookHeight,
+                  autoCenter: true,
+                  display: isMobile ? "single" : "double",
+                });
 
-                  const canvas = document.createElement("canvas");
-                  const context = canvas.getContext("2d");
-                  canvas.width = canvasWidth;
-                  canvas.height = canvasHeight;
+                flipbook.style.visibility = "visible";
 
-                  return page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
-                    const img = document.createElement("img");
-                    img.src = canvas.toDataURL("image/png");
-                    console.log("Canvas image src:", img.src.slice(0, 50));
+                setTimeout(() => {
+                  $("#flipbook").turn("center");
+                }, 500);
 
-                    const pageDiv = document.createElement("div");
-                    pageDiv.className = "page";
-                    pageDiv.appendChild(img);
-                    flipbook.appendChild(pageDiv);
-                    console.log("Pagina toegevoegd:", pageDiv);
-                  });
-                })
-              );
-            }
-
-            Promise.all(pagePromises).then(() => {
-              const pageCount = document.querySelectorAll(".page").length;
-              console.log("Aantal .page elementen:", pageCount);
-
-              console.log("Alle pagina’s geladen, flipbook activeren...");
-
-              const isMobile = window.innerWidth < 600;
-
-              $("#flipbook").turn({
-                width: flipbookWidth,
-                height: canvasHeight,
-                autoCenter: true,
-                display: isMobile ? "single" : "double",
-              });
-
-              setTimeout(() => {
-                $("#flipbook").turn("center");
-              }, 500);
-
-              $("#flipbook").bind("turn.page", function () {
-                flipSound.currentTime = 0;
-                flipSound.play();
-              });
-
-              console.log("Turn.js geactiveerd");
+                $("#flipbook").bind("turn.page", function () {
+                  flipSound.currentTime = 0;
+                  flipSound.play();
+                });
+              }
             });
           });
-        });
-      };
+        }
+      });
     </script>
   </body>
 </html>
