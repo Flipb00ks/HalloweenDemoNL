@@ -67,3 +67,114 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = "BUILD/pdf.worker.js";
     </script>
   </head>
+
+  <body>
+    <button id="fullscreen-btn">Fullscreen</button>
+    <div id="flipbook"></div>
+    <audio id="flipSound" src="blad.mp3" preload="auto"></audio>
+
+    <script>
+      document.getElementById("fullscreen-btn").onclick = () => {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        }
+      };
+
+      window.onload = () => {
+        const flipbook = document.getElementById("flipbook");
+        const flipSound = document.getElementById("flipSound");
+        const url = "boekje.pdf";
+
+        flipbook.style.visibility = "visible";
+        flipbook.style.display = "block";
+
+        setTimeout(() => {
+          let flipbookWidth = flipbook.clientWidth;
+          if (flipbookWidth === 0) {
+            flipbookWidth = window.innerWidth * 0.9;
+            console.warn("Fallback breedte gebruikt:", flipbookWidth);
+          }
+
+          const originalWidth = 540;
+          const originalHeight = 960;
+          const maxScale = 1.5;
+          const scale = Math.min(flipbookWidth / (originalWidth * 2), maxScale);
+          const canvasWidth = originalWidth * scale;
+          const canvasHeight = originalHeight * scale;
+
+          console.log("Start PDF load...");
+          pdfjsLib.getDocument(url).promise.then((pdf) => {
+            console.log("PDF geladen:", pdf);
+            const totalPages = pdf.numPages;
+            console.log("Aantal pagina’s:", totalPages);
+            console.log("Schaal:", scale);
+            console.log("Canvas breedte:", canvasWidth, "hoogte:", canvasHeight);
+
+            const pagePromises = [];
+
+            // Testpagina toevoegen vóór PDF-rendering
+            const dummy = document.createElement("div");
+            dummy.className = "page";
+            dummy.innerHTML = "<h1 style='text-align:center;'>Testpagina</h1>";
+            flipbook.appendChild(dummy);
+
+            for (let i = 1; i <= totalPages; i++) {
+              pagePromises.push(
+                pdf.getPage(i).then((page) => {
+                  const viewport = page.getViewport({ scale });
+
+                  const canvas = document.createElement("canvas");
+                  const context = canvas.getContext("2d");
+                  canvas.width = canvasWidth;
+                  canvas.height = canvasHeight;
+
+                  return page.render({ canvasContext: context, viewport: viewport }).promise.then(() => {
+                    const img = document.createElement("img");
+                    img.src = canvas.toDataURL("image/png");
+                    console.log("Canvas image src:", img.src.slice(0, 50)); // eerste 50 tekens
+                    img.style.width = "100%";
+                    img.style.height = "100%";
+                    img.style.objectFit = "contain";
+
+                    const pageDiv = document.createElement("div");
+                    pageDiv.className = "page";
+                    pageDiv.appendChild(img);
+                    flipbook.appendChild(pageDiv);
+                    console.log("Pagina toegevoegd:", pageDiv);
+                  });
+                })
+              );
+            }
+
+            Promise.all(pagePromises).then(() => {
+              const pageCount = document.querySelectorAll(".page").length;
+              console.log("Aantal .page elementen:", pageCount);
+
+              console.log("Alle pagina’s geladen, flipbook activeren...");
+
+              const isMobile = window.innerWidth < 600;
+
+              $("#flipbook").turn({
+                width: flipbookWidth,
+                height: canvasHeight,
+                autoCenter: true,
+                display: isMobile ? "single" : "double",
+              });
+
+              setTimeout(() => {
+                $("#flipbook").turn("center");
+              }, 500);
+
+              $("#flipbook").bind("turn.page", function () {
+                flipSound.currentTime = 0;
+                flipSound.play();
+              });
+
+              console.log("Turn.js geactiveerd");
+            });
+          });
+        }, 100);
+      };
+    </script>
+  </body>
+</html>
