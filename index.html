@@ -1,5 +1,5 @@
 <!DOCTYPE html>
- <html lang="nl">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <title>Flipboek</title>
@@ -86,10 +86,14 @@
         console.log("📄 PDF geladen");
         const totalPages = pdf.numPages;
 
-        const desiredWidth = window.innerWidth * 0.9;
-        const desiredHeight = window.innerHeight * 0.9;
-        const canvasWidth = desiredWidth / 2;
-        const canvasHeight = desiredHeight;
+        const canvasHeight = window.innerHeight * 0.9;
+        const canvasWidth = canvasHeight * (9 / 16); // 768:1344 verhouding
+        const flipbookWidth = canvasWidth * 2;
+
+        console.log("📐 Canvas:", canvasWidth, canvasHeight);
+        console.log("📘 Flipbook breedte:", flipbookWidth);
+
+        flipbook.style.width = flipbookWidth + "px";
 
         const pagePromises = [];
 
@@ -123,10 +127,7 @@
         Promise.all(pagePromises).then(() => {
           console.log("✅ Alle pagina’s toegevoegd");
 
-          const flipbookWidth = canvasWidth * 2;
           const isMobile = window.innerWidth < 600;
-
-          flipbook.style.width = flipbookWidth + "px";
 
           $("#flipbook").turn({
             width: flipbookWidth,
